@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Dunia Baty 3D - Bat Algorithm Echolocation Swarm</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦇</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-dark">
+
+  <!-- 3D WebGL Canvas Viewport -->
+  <div id="webglContainer"></div>
+
+  <!-- UI Overlay Wrapper -->
+  <div class="ui-overlay">
+
+    <!-- TOP HEADER BAR -->
+    <header class="top-nav glass-panel">
+      <div class="brand-badge">
+        <div class="brand-text">
+          <h2>Dunia Baty 3D <span class="tag-meta">Ekolokasi Kawanan</span></h2>
+          <p>Optimasi Bio-Inspired & Swarm Intelligence (Xin-She Yang, 2010)</p>
+        </div>
+      </div>
+
+      <div class="nav-center-tools">
+        <!-- Pilihan Lingkungan -->
+        <div class="env-pill-group">
+          <button class="btn-env-pill active" data-env="cavern" id="btnEnvCavern">Pulau Kristal</button>
+          <button class="btn-env-pill" data-env="warung" id="btnEnvWarung">Warung Kota</button>
+        </div>
+
+        <!-- Toggle Mode Gelap / Terang (Default Gelap) -->
+        <button id="btnThemeToggle" class="btn-theme-pill" title="Ubah Tema Warna">
+          <span class="theme-icon">🌙</span> <span id="themeLabel">Mode Gelap</span>
+        </button>
+      </div>
+
+      <div class="nav-right-actions">
+        <button id="btnAudioToggle" class="btn-circle active" title="Suara Sonar">
+          <svg class="icon-audio-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          <svg class="icon-audio-off" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+        </button>
+        <button class="btn-circle btn-cam active" data-cam="free" title="Kamera Bebas Orbit">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+        </button>
+        <button class="btn-circle btn-cam" data-cam="follow_alpha" title="Kamera Ikuti Terbaik">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </button>
+        <button id="btnOpenStory" class="btn-story-pill" title="Panduan Konsep Materi Presentasi">
+          Materi Konsep
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN BODY AREA (PANEL KIRI: LEGENDA, PANEL KANAN: TELEMETRI & KONTROL) -->
+    <main class="main-work-area">
+
+      <!-- PANEL KIRI: LEGENDA EDUKASI & PETUNJUK VISUAL -->
+      <aside class="panel-left glass-panel">
+        <h3 class="panel-title">Panduan Visual Ekolokasi</h3>
+        <div class="legend-list">
+          <div class="legend-item">
+            <span class="legend-dot dot-yellow"></span>
+            <div><b>Titik kuning bercahaya</b> = Mangsa target</div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot dot-pink"></span>
+            <div><b>Kelelawar pink berlabel "Terbaik"</b> = Paling dekat dengan mangsa</div>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot dot-green"></span>
+            <div><b>Cincin hijau</b> = Pulsa suara ultrasonik (ukuran mengikuti Loudness A)</div>
+          </div>
+          <div class="legend-note">
+            Kelelawar Terbaik terbang paling depan memandu arah kawanan menuju mangsa.
+          </div>
+          <div class="legend-interact-hint">
+            <b>Interaksi:</b> Klik di mana saja pada layar 3D untuk memindahkan mangsa (nilai A dan r akan direset).
+          </div>
+        </div>
+
+        <!-- Substep Box Live Explanation -->
+        <div id="stepBannerCard" class="substep-card">
+          <div class="substep-header">
+            <span id="stepBannerTitle" class="substep-title">Kawanan Berburu</span>
+          </div>
+          <code id="stepBannerFormula" class="substep-code">v += (x* - x_i) * f_i</code>
+          <p id="stepBannerDesc" class="substep-text">Setiap Baty memancarkan frekuensi f dan menyesuaikan kecepatan v menuju solusi terbaik.</p>
+        </div>
+      </aside>
+
+      <!-- PANEL KANAN: TELEMETRI, GRAFIK, PENGATURAN & TOMBOL -->
+      <aside class="panel-right glass-panel">
+        
+        <!-- Grid Statistik Metrik -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="m-lbl">Iterasi</span>
+            <b id="sI" class="m-val">0</b>
+          </div>
+          <div class="metric-card best-metric">
+            <span class="m-lbl">Jarak Terbaik</span>
+            <b id="sD" class="m-val pink">-</b>
+          </div>
+          <div class="metric-card">
+            <span class="m-lbl">f rata-rata</span>
+            <b id="sF" class="m-val">-</b>
+          </div>
+          <div class="metric-card">
+            <span class="m-lbl">v rata-rata</span>
+            <b id="sV" class="m-val">-</b>
+          </div>
+          <div class="metric-card">
+            <span class="m-lbl">A rata-rata</span>
+            <b id="sA" class="m-val pink">-</b>
+          </div>
+          <div class="metric-card">
+            <span class="m-lbl">r rata-rata</span>
+            <b id="sR" class="m-val green">-</b>
+          </div>
+        </div>
+
+        <!-- Grafik Kecil Real-Time: A turun (pink) vs r naik (hijau) -->
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <span>Dinamika Suara</span>
+            <div class="chart-legend">
+              <span class="leg-pink">━ Garis pink: A turun</span>
+              <span class="leg-green">━ Garis hijau: r naik</span>
+            </div>
+          </div>
+          <canvas id="chartSoundDynamics" width="520" height="130" class="canvas-chart"></canvas>
+        </div>
+
+        <!-- Pengaturan Parameter Sliders -->
+        <div class="controls-group">
+          <div class="slider-row">
+            <label for="n">Jumlah kelelawar</label>
+            <input id="n" type="range" min="3" max="30" value="18">
+            <span id="nv" class="slider-val">18</span>
+          </div>
+          <div class="slider-row">
+            <label for="fm">f max</label>
+            <input id="fm" type="range" min="0.2" max="2.0" step="0.1" value="1.5">
+            <span id="fmv" class="slider-val">1.5</span>
+          </div>
+          <div class="slider-row">
+            <label for="al">&alpha; (A turun)</label>
+            <input id="al" type="range" min="0.80" max="0.99" step="0.01" value="0.92">
+            <span id="alv" class="slider-val">0.92</span>
+          </div>
+          <div class="slider-row">
+            <label for="ga">&gamma; (r naik)</label>
+            <input id="ga" type="range" min="0.02" max="0.50" step="0.01" value="0.05">
+            <span id="gav" class="slider-val">0.05</span>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Utama -->
+        <div class="action-buttons-row">
+          <button id="bp" class="btn-action primary">Jeda</button>
+          <button id="bs" class="btn-action">Langkah</button>
+          <button id="br" class="btn-action">Ulang</button>
+        </div>
+
+      </aside>
+
+    </main>
+
+    <!-- FOOTER HINT INTERAKTIF -->
+    <footer class="bottom-hint-bar">
+      <div class="hint-badge glass-panel">
+        <span class="hint-icon">💡</span> Klik di area 3D untuk memindahkan mangsa &middot; seret untuk putar kamera &middot; scroll untuk zoom
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- MODAL MATERI PRESENTASI & KONSEP (UNTUK PENJELASAN KE DOSEN) -->
+  <div id="storyModal" class="story-modal-overlay">
+    <div class="story-dialog glass-panel">
+      <div class="story-modal-header">
+        <span id="storyChapterBadge" class="story-chapter-badge">BAB 1 DARI 8</span>
+        <h3 id="storyChapterTitle" class="story-header-title">Pengantar: Bat Algorithm & Ekolokasi</h3>
+        <button id="storyBtnClose" class="btn-close-modal" title="Tutup">&times;</button>
+      </div>
+      <div id="storyContentText" class="story-modal-body"></div>
+      <div class="story-modal-footer">
+        <button id="storyBtnPrev" class="btn-story-nav" disabled>&larr; Sebelumnya</button>
+        <button id="storyBtnAction" class="btn-story-action">Lihat Aksi</button>
+        <button id="storyBtnNext" class="btn-story-nav primary">Lanjut &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <!-- Application Modules -->
+  <script src="js/bat_algorithm.js"></script>
+  <script src="js/bat_model.js"></script>
+  <script src="js/world_scene.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/story_guide.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+</html>
