@@ -131,7 +131,32 @@ html, body {
 .brand-badge {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+
+.btn-back-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card-sub-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--tx-main);
+  text-decoration: none;
+  font-family: var(--font-game);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-back-pill:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: var(--bl);
+  color: var(--bl);
+  transform: translateX(-2px);
 }
 
 .brand-text h2 {
